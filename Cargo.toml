@@ -1,0 +1,83 @@
+[package]
+name = "twkb"
+version = "0.1.0"
+description = "Fast reader and writer for Tiny Well-Known Binary (TWKB) geometries, with geo-traits"
+authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
+repository = "https://github.com/nyurik/twkb"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+keywords = ["twkb", "wkb", "geometry", "gis", "postgis"]
+categories = ["encoding", "parser-implementations", "science::geo"]
+rust-version = "1.88"
+# The fixtures come from other projects, some under licenses the crate is not: they stay in the repository. The
+# wkb crate's samples, under the crate's own licenses, ship with the tests that use them
+include = [
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+    "/README.md",
+    "/benches",
+    "/examples",
+    "/src",
+    "/tests/common",
+    "/tests/regressions.rs",
+    "/tests/wkb",
+    "/tests/wkb_samples.rs",
+]
+
+[[bench]]
+name = "twkb"
+harness = false
+
+[dependencies]
+geo-traits = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+criterion = "0.8"
+# geo-traits' conversion into geo-types, for the tests
+geo-traits = { version = "0.3", features = ["geo-types"] }
+geo-types = { version = "0.7.20", default-features = false, features = ["std"] }
+insta = "1.43"
+postgres = "0.19"
+wkb = "0.9"
+wkt = { version = "0.14", default-features = false }
+
+[lints.rust]
+# `deny` rather than `forbid`: geo-traits declares some accessors `unsafe fn`,
+# whose impls opt in with `#[expect(unsafe_code)]`, their bodies bounds-checked
+unsafe_code = "deny"
+missing_docs = "warn"
+unused_qualifications = "warn"
+
+[lints.clippy]
+# Restrictions
+absolute_paths = "warn"
+as_underscore = "warn"
+assertions_on_result_states = "warn"
+clone_on_ref_ptr = "warn"
+dbg_macro = "warn"
+disallowed_methods = "forbid"
+empty_structs_with_brackets = "warn"
+format_push_string = "warn"
+if_then_some_else_none = "warn"
+lossy_float_literal = "warn"
+panic = "warn"
+panic_in_result_fn = "warn"
+print_stderr = "warn"
+print_stdout = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+str_to_string = "warn"
+todo = "warn"
+try_err = "warn"
+undocumented_unsafe_blocks = "warn"
+unimplemented = "warn"
+unnecessary_self_imports = "warn"
+unused_trait_names = "warn"
+unwrap_used = "warn"
+use_self = "warn"
+wildcard_enum_match_arm = "warn"
+
+# Pedantics without being too noisy
+cargo = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+module_name_repetitions = "allow"

@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: 'just,cargo-binstall' }
+      - run: just ci-test
+
+  test-msrv:
+    name: Test MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: taiki-e/install-action@v2
+        with: { tool: 'just,cargo-binstall,cargo-minimal-versions,cargo-hack' }
+      - name: Read MSRV
+        id: msrv
+        run: echo "value=$(just get-msrv)" >> $GITHUB_OUTPUT
+      - name: Install nightly Rust for minimal dependency resolution
+        uses: dtolnay/rust-toolchain@stable
+        with: { toolchain: nightly }
+      - name: Install MSRV Rust ${{ steps.msrv.outputs.value }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ steps.msrv.outputs.value }}
+      - run: just ci-test-msrv
+
+  coverage:
+    name: Code Coverage
+    if: github.event_name != 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: taiki-e/install-action@v2
+        with: { tool: 'just,cargo-llvm-cov' }
+      - run: just ci-coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: target/llvm-cov/lcov.info
+
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ read, write ]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with: { toolchain: nightly }
+      - uses: taiki-e/install-action@v2
+        with: { tool: 'just,cargo-binstall,cargo-fuzz' }
+      - run: just fuzz ${{ matrix.target }} 60
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fuzz-${{ matrix.target }}-artifacts
+          path: fuzz/artifacts
+
+  postgis:
+    name: Test against PostGIS
+    runs-on: ubuntu-latest
+    services:
+      postgis:
+        # The same as `postgis_image` in the justfile
+        image: postgis/postgis:18-3.6-alpine
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: [ '5432:5432' ]
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v7
+      - if: github.event_name != 'release' && github.event_name != 'workflow_dispatch'
+        uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: 'just' }
+      - run: just test-postgis-at postgresql://postgres:postgres@localhost:5432/postgres
+
+  cpd:
+    name: Copy/Paste Detection
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      BASE_REF: ${{ github.base_ref }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch base branch to detect newly added clones
+        run: git fetch --no-tags --depth=1 origin "$BASE_REF"
+      - uses: taiki-e/install-action@v2
+        with: { tool: 'just,cargo-binstall' }
+      - run: just ci-cpd "origin/$BASE_REF"
+        env:
+          CPD_BLOB_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
+      # Pull requests from forks get a read-only token, so they only get the job summary
+      - if: github.event.pull_request.head.repo.full_name == github.repository
+        name: Post summary as a PR comment
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: jscpd
+          path: target/jscpd/summary.md
+          skip_unchanged: true
+
+  # This job checks if any of the previous jobs failed or were canceled.
+  # This approach also allows some jobs to be skipped if they are not needed.
+  # The fuzz jobs are random, so a finding unrelated to a change also stops a release, until it is fixed
+  ci-passed:
+    permissions: {}
+    needs: [ test, test-msrv, postgis, fuzz ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Result of the needed steps
+        run: echo "${{ toJSON(needs) }}"
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+
+  # Release unpublished packages or create a PR with changes
+  release-plz:
+    needs: [ ci-passed ]
+    # IMPORTANT: The name below must be your GitHub org or username
+    if: |
+      always()
+      && needs.ci-passed.result == 'success'
+      && github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && github.repository_owner == 'nyurik'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish to crates.io if crate's version is newer
+        uses: release-plz/action@v0.5
+        id: release
+        with: { command: release }
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+      - if: ${{ steps.release.outputs.releases_created == 'false' }}
+        name: If version is the same, create a PR proposing new version and changelog for the next release
+        uses: release-plz/action@v0.5
+        with: { command: release-pr }
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
