@@ -56,7 +56,7 @@ pub fn shape(g: &impl GeometryTrait<T = f64>) -> Shape {
         Kind::GeometryCollection(c) => {
             Shape::GeometryCollection(c.geometries().map(|g| shape(&g)).collect())
         }
-        Kind::Rect(_) | Kind::Triangle(_) => unreachable!("not in the fixtures"),
+        Kind::Rect(_) | Kind::Triangle(_) => unreachable!("not in the cases"),
     }
 }
 

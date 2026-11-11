@@ -29,17 +29,31 @@ decimal digits. PostGIS writes it with [`ST_AsTWKB`](https://postgis.net/docs/ST
 
 ```rust
 use geo_traits::{CoordTrait as _, LineStringTrait as _};
-use twkb::{Precision, Twkb, WriteOptions, write_geometry};
+use twkb::{write_geometry, Precision, Twkb, WriteOptions};
 
 fn write_and_read() -> Result<(), twkb::TwkbError> {
-    let line = geo_types::LineString::from(vec![(-71.036_671_8, 42.373_449_3), (-71.036_761_9, 42.373_312)]);
+    let line = geo_types::LineString::from(vec![
+        (-71.036_671_8, 42.373_449_3),
+        (-71.036_761_9, 42.373_312),
+    ]);
     let mut buf = Vec::new();
-    let opts = WriteOptions { precision: Precision::xy(7), ..WriteOptions::default() };
+    let opts = WriteOptions {
+        precision: Precision::xy(7),
+        ..WriteOptions::default()
+    };
     write_geometry(&mut buf, &line, &opts)?;
 
-    let Twkb::LineString(read) = Twkb::new(&buf)? else { unreachable!() };
-    assert_eq!(read.coord(1).map(|c| c.x_y()), Some((-71.036_761_9, 42.373_312)));
-    assert_eq!(read.stored_coords(), [-710_366_718, 423_734_493, -710_367_619, 423_733_120]);
+    let Twkb::LineString(read) = Twkb::new(&buf)? else {
+        unreachable!()
+    };
+    assert_eq!(
+        read.coord(1).map(|c| c.x_y()),
+        Some((-71.036_761_9, 42.373_312))
+    );
+    assert_eq!(
+        read.stored_coords(),
+        [-710_366_718, 423_734_493, -710_367_619, 423_733_120]
+    );
     Ok(())
 }
 ```
@@ -71,18 +85,18 @@ cargo run --example decode -- 04070b0004020402000200020404
 
 ## Tests
 
-The fixtures come from other implementations, each in
-[`tests/fixtures/`](https://github.com/nyurik/twkb/tree/main/tests/fixtures) with its license and the commit it came
-from: JTS's test data, which PostGIS generated, PostGIS's own regression tests, and the tests of wkx, twkb.js, twkbpy,
-twkbC and a Go reader, each with its expected TWKB and the geometry it reads as in [insta](https://insta.rs) inline
-snapshots. Every case is decoded, written again and compared byte for byte, and written from its source WKT where it has
-one. `just test-postgis` checks every case, and 20,000 random geometries, against PostGIS in Docker in one batch: the
-same bytes written, and the same geometries read. The wkb crate's sample geometries are written at several precisions
-and read back, and passed through the wkb crate. [`fuzz/`](https://github.com/nyurik/twkb/tree/main/fuzz) holds
-the cargo-fuzz targets (`just fuzz read 60`), and `tests/regressions.rs` every input they found.
+[`compat/`](https://github.com/nyurik/twkb/tree/main/compat) holds the test cases of other implementations, each
+with its license and the commit it came from: JTS's test data, which PostGIS generated, PostGIS's own regression
+tests, and the tests of wkx, twkb.js, twkbpy, twkbC and a Go reader, each with its expected TWKB and the geometry it
+reads as in [insta](https://insta.rs) inline snapshots, beside cases of our own. Every case is decoded, written again
+and compared byte for byte, and written from its source WKT where it has one. `just test-postgis` checks every
+case, and 20,000 random geometries, against PostGIS in Docker in one batch: the same bytes written, and the same
+geometries read. The wkb crate's sample geometries are written at several precisions and read back, and passed
+through the wkb crate. [`fuzz/`](https://github.com/nyurik/twkb/tree/main/fuzz) holds the cargo-fuzz targets
+(`just fuzz read 60`), and `tests/regressions.rs` every input they found.
 
-The fixtures stay in the repository, out of the published crate: some are under licenses the crate is not, PostGIS's
-GPL among them; they are test data only, taken as such, and no code of those projects.
+`compat/` is a crate of its own in the repository, out of the published one: some of the cases are under licenses
+the crate is not, PostGIS's GPL among them; they are test data only, taken as such, and no code of those projects.
 
 ## Performance
 
@@ -114,7 +128,7 @@ Licensed under either of
 * MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
   at your option.
 
-The files in `tests/fixtures/` are under their own projects' licenses, each beside them.
+The test cases in `compat/`'s source directories are under their own projects' licenses, each beside them.
 
 ### Contribution
 

@@ -11,14 +11,14 @@ agents alike.
 | `src/reader/` | `Twkb::new`, `ReadOptions`, the cursor and its memory budget, the geometries and their geo-traits |
 | `src/writer.rs` | `write_geometry` for any geo-traits geometry, and the writers of integer coordinates |
 | `tests/` | Round trips of the wkb crate's samples (`wkb/`), and the inputs the fuzzers found (`regressions.rs`) |
-| `tests/fixtures/` | Cases of other implementations and our own, each with a README and license; the PostGIS check |
+| `compat/` | A crate of other implementations' cases, each with README and license, our own, and the PostGIS check |
 | `fuzz/` | The cargo-fuzz targets, in a workspace of their own (`just fuzz`) |
 | `benches/`, `examples/` | The criterion bench against wkb; conversions between TWKB and WKT or WKB |
 
 ## Design
 
 - Performance first, while exactly correct: what PostGIS reads back from what is written, and the same bytes it
-  writes, but for the differences `KNOWN` in `tests/fixtures/against_postgis.rs` lists with their reasons. Measure
+  writes, but for the differences `KNOWN` in `compat/against_postgis.rs` lists with their reasons. Measure
   with `just bench` before and after a change to a hot path.
 - The interface is geo-traits, as in the wkb crate, so the code could move there: no conversions to or from WKB, WKT
   or geo-types outside the tests, examples and benches, which use them as dev-dependencies.
@@ -31,9 +31,9 @@ agents alike.
 
 The crate is MIT OR Apache-2.0. Code under the GPL, LGPL or AGPL is never read, copied or adapted. Test data, inputs
 and their expected outputs, may come from any project, as `case!`s with insta inline snapshots, with its license beside
-them in `tests/fixtures/<source>/` and a README linking the files they were taken from at their commit; PostGIS's GPL
-regression cases are there this way. `tests/fixtures/` is left out of the published crate by `include` in
-`Cargo.toml`.
+them in `compat/<source>/` and a README linking the files they were taken from at their commit; PostGIS's GPL
+regression cases are there this way. `compat/` is a crate of its own, `twkb-compat`, never published, and so outside
+the published package; its own code (`main.rs`, `against_postgis.rs`, `own/`) is under the crate's licenses.
 
 ## Writing
 

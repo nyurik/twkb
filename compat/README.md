@@ -1,8 +1,14 @@
-# Fixtures
+# Compatibility
 
-TWKB test cases from other implementations, one module per source with its license, the commit it came from and a
-README linking the files the cases were taken from, and this crate's own cases in `own`. `main.rs` makes them one test
-target, `fixtures`.
+twkb against other TWKB implementations and against PostGIS: the unpublished crate `twkb-compat`, whose one test
+target, `compat`, runs with `cargo test -p twkb-compat` (and `cargo test --workspace`).
+
+- `main.rs`, `against_postgis.rs` and `own/` are this repository's code and cases, under its own licenses, MIT or
+  Apache 2.0.
+- Every other directory holds the test cases of one other implementation, under that project's license, which is
+  beside them, with a README linking the files they were taken from at their commit. Only test data is taken, inputs
+  and their expected outputs, never code; some of it is under licenses the crate is not, PostGIS's GPL among them,
+  which is why none of this is in the published package.
 
 Each case is a `case!` with its expected values as [insta](https://insta.rs) inline snapshots, in a function that
 takes a `Runner` as `r`:

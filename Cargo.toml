@@ -1,54 +1,17 @@
-[package]
-name = "twkb"
-version = "0.1.0"
-description = "Fast reader and writer for Tiny Well-Known Binary (TWKB) geometries, with geo-traits"
-authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
-repository = "https://github.com/nyurik/twkb"
-edition = "2024"
-license = "MIT OR Apache-2.0"
-keywords = ["twkb", "wkb", "geometry", "gis", "postgis"]
-categories = ["encoding", "parser-implementations", "science::geo"]
-rust-version = "1.88"
-# The fixtures come from other projects, some under licenses the crate is not: they stay in the repository. The
-# wkb crate's samples, under the crate's own licenses, ship with the tests that use them
-include = [
-    "/LICENSE-APACHE",
-    "/LICENSE-MIT",
-    "/README.md",
-    "/benches",
-    "/examples",
-    "/src",
-    "/tests/common",
-    "/tests/regressions.rs",
-    "/tests/wkb",
-    "/tests/wkb_samples.rs",
-]
 
-[[bench]]
-name = "twkb"
-harness = false
+[workspace]
+# Other implementations' test cases, under their own licenses, and the PostGIS check: a crate of their own, outside
+# the published package
+members = ["compat"]
 
-[dependencies]
-geo-traits = { version = "0.3", default-features = false }
-
-[dev-dependencies]
-criterion = "0.8"
-# geo-traits' conversion into geo-types, for the tests
-geo-traits = { version = "0.3", features = ["geo-types"] }
-geo-types = { version = "0.7.20", default-features = false, features = ["std"] }
-insta = "1.43"
-postgres = "0.19"
-wkb = "0.9"
-wkt = { version = "0.14", default-features = false }
-
-[lints.rust]
+[workspace.lints.rust]
 # `deny` rather than `forbid`: geo-traits declares some accessors `unsafe fn`,
 # whose impls opt in with `#[expect(unsafe_code)]`, their bodies bounds-checked
 unsafe_code = "deny"
 missing_docs = "warn"
 unused_qualifications = "warn"
 
-[lints.clippy]
+[workspace.lints.clippy]
 # Restrictions
 absolute_paths = "warn"
 as_underscore = "warn"
@@ -81,3 +44,46 @@ cargo = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 module_name_repetitions = "allow"
+[package]
+name = "twkb"
+version = "0.1.0"
+description = "Fast reader and writer for Tiny Well-Known Binary (TWKB) geometries, with geo-traits"
+authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
+repository = "https://github.com/nyurik/twkb"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+keywords = ["twkb", "wkb", "geometry", "gis", "postgis"]
+categories = ["encoding", "parser-implementations", "science::geo"]
+rust-version = "1.88"
+# What the published crate's own tests need; the wkb crate's samples are under the crate's own licenses
+include = [
+    "/LICENSE-APACHE",
+    "/LICENSE-MIT",
+    "/README.md",
+    "/benches",
+    "/examples",
+    "/src",
+    "/tests/common",
+    "/tests/regressions.rs",
+    "/tests/wkb",
+    "/tests/wkb_samples.rs",
+]
+
+[[bench]]
+name = "twkb"
+harness = false
+
+[dependencies]
+geo-traits = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+criterion = "0.8"
+# geo-traits' conversion into geo-types, for the tests
+geo-traits = { version = "0.3", features = ["geo-types"] }
+geo-types = { version = "0.7.20", default-features = false, features = ["std"] }
+insta = "1.43"
+wkb = "0.9"
+wkt = { version = "0.14", default-features = false }
+
+[lints]
+workspace = true

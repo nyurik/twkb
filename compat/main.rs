@@ -9,7 +9,7 @@
 #![allow(clippy::unwrap_used, reason = "a test fails on any error")]
 #![allow(clippy::too_many_lines, reason = "a source's cases, one after another")]
 
-#[path = "../common/mod.rs"]
+#[path = "../tests/common/mod.rs"]
 mod common;
 
 mod against_postgis;

@@ -95,14 +95,14 @@ env-info:
     @echo "CARGO_BUILD_WARNINGS='$CARGO_BUILD_WARNINGS'"
     @echo "RUST_BACKTRACE='$RUST_BACKTRACE'"
 
-# Fuzz a target with cargo-fuzz and nightly for some seconds (`just fuzz write 600`); the read corpus starts from the fixtures
+# Fuzz a target with cargo-fuzz and nightly for some seconds (`just fuzz write 600`); the read corpus starts from compat's cases
 fuzz target='read' seconds='60':  (cargo-install 'cargo-fuzz')
     #!/usr/bin/env bash
     set -euo pipefail
     cd fuzz
     if [[ {{quote(target)}} == read && ! -d corpus/read ]]; then
         # Each case's TWKB, one file each
-        TWKB_CORPUS_DIR="$PWD/corpus/read" cargo test --manifest-path ../Cargo.toml --test fixtures write_fuzz_corpus \
+        TWKB_CORPUS_DIR="$PWD/corpus/read" cargo test --manifest-path ../Cargo.toml -p twkb-compat --test compat write_fuzz_corpus \
             -- --ignored --quiet
     fi
     cargo +nightly fuzz run --target "$(rustc -vV | sed -n 's/^host: //p')" {{quote(target)}} -- \
@@ -177,7 +177,7 @@ test-postgis port='5436':  (assert-cmd 'docker')
 
 # Check every case against the PostGIS at a connection string, in one batch
 test-postgis-at url:
-    TWKB_POSTGIS_URL={{quote(url)}} cargo test --test fixtures against_postgis::against_postgis -- --ignored --exact --nocapture
+    TWKB_POSTGIS_URL={{quote(url)}} cargo test -p twkb-compat --test compat against_postgis::against_postgis -- --ignored --exact --nocapture
 
 # Stop the PostGIS container of `just test-postgis`
 stop-postgis:

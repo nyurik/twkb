@@ -1,0 +1,24 @@
+[package]
+name = "twkb-compat"
+version = "0.0.0"
+description = "twkb against other TWKB implementations' test cases and against PostGIS"
+publish = false
+edition = "2024"
+# Mixed: this crate's own code and cases are MIT OR Apache-2.0, the other implementations' test cases are under their
+# projects' licenses, each beside them (README.md)
+license = "LicenseRef-Mixed"
+
+[dev-dependencies]
+geo-traits = { version = "0.3", features = ["geo-types"] }
+insta = "1.43"
+postgres = "0.19"
+twkb = { path = ".." }
+wkb = "0.9"
+wkt = { version = "0.14", default-features = false }
+
+[lints]
+workspace = true
+
+[[test]]
+name = "compat"
+path = "main.rs"
