@@ -1,5 +1,7 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
+# Other projects' licenses beside the test cases taken from them stay as their projects have them
+exclude: '^tests/(fixtures/[^/]+|wkb)/(LICENSE|COPYING)'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
