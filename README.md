@@ -105,13 +105,13 @@ metres), and the same as WKB with the wkb crate. On an Intel i9-10885H laptop (2
 
 | | twkb | wkb |
 |---|---|---|
-| size | 3,481 bytes | 16,009 bytes |
+| size | 3,481 bytes (78% smaller) | 16,009 bytes |
 | write integers (`write_scaled_line_string`) | 5.1 µs | |
-| write from geo-types | 13.4 µs | 1.9 µs |
+| write from geo-types | 13.4 µs (605% slower) | 1.9 µs |
 | read, sum the stored integers | 4.9 µs | |
-| read, sum the `f64` ordinates | 12.7 µs | 3.8 µs |
+| read, sum the `f64` ordinates | 12.7 µs (234% slower) | 3.8 µs |
 
-TWKB's steps cost decoding that WKB's plain `f64`s do not; it is a quarter of the size.
+TWKB's steps cost decoding that WKB's plain `f64`s do not; it is about a fifth of the size.
 
 ## Development
 
