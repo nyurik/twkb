@@ -46,7 +46,7 @@ missing_errors_doc = "allow"
 module_name_repetitions = "allow"
 [package]
 name = "twkb"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fast reader and writer for Tiny Well-Known Binary (TWKB) geometries, with geo-traits"
 authors = ["Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 repository = "https://github.com/nyurik/twkb"
