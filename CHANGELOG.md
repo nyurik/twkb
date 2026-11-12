@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2](https://github.com/nyurik/twkb/compare/v0.1.1...v0.1.2) - 2026-11-12
+
+### Other
+
+- use thiserror and add test cases ([#3](https://github.com/nyurik/twkb/pull/3))
+
 ## [0.1.1](https://github.com/nyurik/twkb/compare/v0.1.0...v0.1.1) - 2026-11-11
 
 ### Other
