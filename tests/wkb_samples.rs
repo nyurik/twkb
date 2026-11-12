@@ -7,11 +7,11 @@ mod common;
 #[path = "wkb/samples.rs"]
 mod samples;
 
+use std::str::FromStr as _;
+
 use common::{same, shape};
 use geo_traits::to_geo::ToGeoGeometry as _;
 use geo_types::Geometry;
-use std::str::FromStr as _;
-
 use twkb::{Precision, Twkb, WriteOptions, write_geometry};
 use wkb::reader::read_wkb;
 use wkb::writer::{WriteOptions as WkbOptions, write_geometry as write_wkb};

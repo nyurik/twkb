@@ -75,6 +75,7 @@ harness = false
 
 [dependencies]
 geo-traits = { version = "0.3", default-features = false }
+thiserror = "2"
 
 [dev-dependencies]
 criterion = "0.8"
