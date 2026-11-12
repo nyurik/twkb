@@ -59,24 +59,28 @@ pub struct Header {
 impl Header {
     /// The geometry's type.
     #[must_use]
+    #[inline]
     pub fn geometry_type(&self) -> GeometryType {
         self.kind
     }
 
     /// The ordinates of each coordinate.
     #[must_use]
+    #[inline]
     pub fn dimension(&self) -> Dimension {
         self.dim
     }
 
     /// The decimal digits each ordinate keeps.
     #[must_use]
+    #[inline]
     pub fn precision(&self) -> Precision {
         self.precision
     }
 
     /// The size of the rest of the geometry in bytes, if the header gives it.
     #[must_use]
+    #[inline]
     pub fn size(&self) -> Option<u64> {
         self.size
     }
@@ -84,6 +88,7 @@ impl Header {
     /// The bounding box, if the header gives it, as stored: each ordinate's minimum and maximum, x first, as
     /// integers at the [precision](Self::precision).
     #[must_use]
+    #[inline]
     pub fn bbox_stored(&self) -> Option<&[i64]> {
         let n = self.dim.size();
         self.bbox.as_ref().map(|b| &b[..2 * n])
@@ -91,6 +96,7 @@ impl Header {
 
     /// The bounding box, if the header gives it: each ordinate's minimum and maximum, x first.
     #[must_use]
+    #[inline]
     pub fn bbox(&self) -> Option<impl Iterator<Item = (f64, f64)> + '_> {
         let digits = self.digits;
         self.bbox_stored().map(move |b| {
@@ -104,12 +110,14 @@ impl Header {
 
     /// The IDs of a multi-geometry's or a collection's parts, if the header gives them.
     #[must_use]
+    #[inline]
     pub fn ids(&self) -> Option<&[i64]> {
         self.ids.as_deref()
     }
 
     /// Whether the geometry is empty.
     #[must_use]
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.empty
     }

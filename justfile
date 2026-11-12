@@ -186,7 +186,7 @@ stop-postgis:
 # Test documentation generation
 test-doc:  (docs '')
 
-# Run the examples as the README shows them
+# Run the command-line examples
 test-examples:
     cargo run --quiet --example encode -- 'LINESTRING(-71.0366718 42.3734493,-71.0367619 42.373312)' --precision 7
     cargo run --quiet --example encode -- 0101000000000000000000f03f0000000000000040

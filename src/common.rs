@@ -61,6 +61,7 @@ pub enum Dimension {
 impl Dimension {
     /// The number of ordinates in a coordinate, 2 to 4.
     #[must_use]
+    #[inline]
     pub fn size(self) -> usize {
         match self {
             Self::Xy => 2,
@@ -128,6 +129,7 @@ pub struct Precision {
 impl Precision {
     /// The same digits for x and y, and none for z and m.
     #[must_use]
+    #[inline]
     pub fn xy(xy: i8) -> Self {
         Self { xy, z: 0, m: 0 }
     }
@@ -230,6 +232,7 @@ pub(crate) fn unzigzag(v: u64) -> i64 {
 }
 
 /// Appends `v` as an unsigned varint: 7 bits per byte, low first, the high bit set on all but the last.
+// Not the integer-encoding crate: with it, `just bench` wrote 19-78% slower (i9-10885H, 2026-11-11)
 #[inline]
 #[expect(clippy::cast_possible_truncation, reason = "the low 7 bits, by design")]
 pub(crate) fn write_uvarint(out: &mut Vec<u8>, mut v: u64) {
