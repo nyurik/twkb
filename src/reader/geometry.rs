@@ -70,6 +70,7 @@ impl Twkb {
 
     /// The geometry's header.
     #[must_use]
+    #[inline]
     pub fn header(&self) -> &Header {
         match self {
             Self::Point(g) => &g.header,
@@ -85,6 +86,7 @@ impl Twkb {
     /// The stored ordinates of every coordinate, in order, as integers at the header's precision; empty for a
     /// collection, whose geometries each have their own.
     #[must_use]
+    #[inline]
     pub fn stored_coords(&self) -> &[i64] {
         match self {
             Self::Point(g) => &g.coords,
@@ -98,7 +100,11 @@ impl Twkb {
     }
 }
 
+// The accessors here are `#[inline]` so that callers in other crates can inline them: reading a line of 1,000
+// points' `f64` ordinates took 11.4 µs without it, 5.8 µs with it (`just bench`, i9-10885H, 2026-11-11)
+
 /// The coordinate `i` of `values`, which holds coordinates of `header`'s dimensions.
+#[inline]
 fn coord<'a>(values: &'a [i64], header: &'a Header, i: usize) -> Coord<'a> {
     let n = header.dimension().size();
     Coord {
@@ -108,6 +114,7 @@ fn coord<'a>(values: &'a [i64], header: &'a Header, i: usize) -> Coord<'a> {
 }
 
 /// Coordinates `from..to` of `values`.
+#[inline]
 fn coords<'a>(values: &'a [i64], header: &'a Header, from: usize, to: usize) -> LineStringRef<'a> {
     let n = header.dimension().size();
     LineStringRef {
@@ -117,6 +124,7 @@ fn coords<'a>(values: &'a [i64], header: &'a Header, from: usize, to: usize) -> 
 }
 
 /// The start of part `i`, whose parts end at `ends`.
+#[inline]
 fn start(ends: &[usize], i: usize) -> usize {
     if i == 0 { 0 } else { ends[i - 1] }
 }
@@ -131,6 +139,7 @@ pub struct Coord<'a> {
 impl Coord<'_> {
     /// The stored ordinates, as integers at the header's precision.
     #[must_use]
+    #[inline]
     pub fn stored(&self) -> &[i64] {
         self.values
     }
@@ -139,18 +148,22 @@ impl Coord<'_> {
 impl CoordTrait for Coord<'_> {
     type T = f64;
 
+    #[inline]
     fn dim(&self) -> Dimensions {
         self.header.dimension().into()
     }
 
+    #[inline]
     fn x(&self) -> f64 {
         to_f64(self.values[0], self.header.digits[0])
     }
 
+    #[inline]
     fn y(&self) -> f64 {
         to_f64(self.values[1], self.header.digits[1])
     }
 
+    #[inline]
     fn nth_or_panic(&self, n: usize) -> f64 {
         to_f64(self.values[n], self.header.digits[n])
     }
@@ -245,12 +258,14 @@ macro_rules! owned {
         impl $ty {
             /// The geometry's header.
             #[must_use]
+            #[inline]
             pub fn header(&self) -> &Header {
                 &self.header
             }
 
             /// The stored ordinates of every coordinate, in order, as integers at the header's precision.
             #[must_use]
+            #[inline]
             pub fn stored_coords(&self) -> &[i64] {
                 &self.coords
             }
@@ -270,6 +285,7 @@ owned!(
 impl GeometryCollection {
     /// The collection's header.
     #[must_use]
+    #[inline]
     pub fn header(&self) -> &Header {
         &self.header
     }
@@ -278,6 +294,7 @@ impl GeometryCollection {
 impl PointTrait for Point {
     type CoordType<'a> = Coord<'a>;
 
+    #[inline]
     fn coord(&self) -> Option<Coord<'_>> {
         (!self.coords.is_empty()).then(|| coord(&self.coords, &self.header, 0))
     }
@@ -289,6 +306,7 @@ impl<'a> PointTrait for PointRef<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn coord(&self) -> Option<Coord<'a>> {
         Some(Coord {
             values: self.values,
@@ -300,6 +318,7 @@ impl<'a> PointTrait for PointRef<'a> {
 impl LineStringTrait for LineString {
     type CoordType<'a> = Coord<'a>;
 
+    #[inline]
     fn num_coords(&self) -> usize {
         self.coords.len() / self.header.dimension().size()
     }
@@ -308,6 +327,7 @@ impl LineStringTrait for LineString {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Coord<'_> {
         coord(&self.coords, &self.header, i)
     }
@@ -319,6 +339,7 @@ impl<'a> LineStringTrait for LineStringRef<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn num_coords(&self) -> usize {
         self.values.len() / self.header.dimension().size()
     }
@@ -327,6 +348,7 @@ impl<'a> LineStringTrait for LineStringRef<'a> {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn coord_unchecked(&self, i: usize) -> Coord<'a> {
         coord(self.values, self.header, i)
     }
@@ -335,10 +357,12 @@ impl<'a> LineStringTrait for LineStringRef<'a> {
 impl PolygonTrait for Polygon {
     type RingType<'a> = LineStringRef<'a>;
 
+    #[inline]
     fn exterior(&self) -> Option<LineStringRef<'_>> {
         (!self.rings.is_empty()).then(|| coords(&self.coords, &self.header, 0, self.rings[0]))
     }
 
+    #[inline]
     fn num_interiors(&self) -> usize {
         self.rings.len().saturating_sub(1)
     }
@@ -347,6 +371,7 @@ impl PolygonTrait for Polygon {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn interior_unchecked(&self, i: usize) -> LineStringRef<'_> {
         coords(&self.coords, &self.header, self.rings[i], self.rings[i + 1])
     }
@@ -358,11 +383,13 @@ impl<'a> PolygonTrait for PolygonRef<'a> {
     where
         Self: 'b;
 
+    #[inline]
     fn exterior(&self) -> Option<LineStringRef<'a>> {
         (!self.rings.is_empty())
             .then(|| coords(self.values, self.header, self.start, self.rings[0]))
     }
 
+    #[inline]
     fn num_interiors(&self) -> usize {
         self.rings.len().saturating_sub(1)
     }
@@ -371,6 +398,7 @@ impl<'a> PolygonTrait for PolygonRef<'a> {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn interior_unchecked(&self, i: usize) -> LineStringRef<'a> {
         coords(self.values, self.header, self.rings[i], self.rings[i + 1])
     }
@@ -379,6 +407,7 @@ impl<'a> PolygonTrait for PolygonRef<'a> {
 impl MultiPointTrait for MultiPoint {
     type InnerPointType<'a> = PointRef<'a>;
 
+    #[inline]
     fn num_points(&self) -> usize {
         self.coords.len() / self.header.dimension().size()
     }
@@ -387,6 +416,7 @@ impl MultiPointTrait for MultiPoint {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn point_unchecked(&self, i: usize) -> PointRef<'_> {
         let c = coord(&self.coords, &self.header, i);
         PointRef {
@@ -399,6 +429,7 @@ impl MultiPointTrait for MultiPoint {
 impl MultiLineStringTrait for MultiLineString {
     type InnerLineStringType<'a> = LineStringRef<'a>;
 
+    #[inline]
     fn num_line_strings(&self) -> usize {
         self.lines.len()
     }
@@ -407,6 +438,7 @@ impl MultiLineStringTrait for MultiLineString {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn line_string_unchecked(&self, i: usize) -> LineStringRef<'_> {
         coords(
             &self.coords,
@@ -420,6 +452,7 @@ impl MultiLineStringTrait for MultiLineString {
 impl MultiPolygonTrait for MultiPolygon {
     type InnerPolygonType<'a> = PolygonRef<'a>;
 
+    #[inline]
     fn num_polygons(&self) -> usize {
         self.polygons.len()
     }
@@ -428,6 +461,7 @@ impl MultiPolygonTrait for MultiPolygon {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn polygon_unchecked(&self, i: usize) -> PolygonRef<'_> {
         let first = start(&self.polygons, i);
         PolygonRef {
@@ -442,6 +476,7 @@ impl MultiPolygonTrait for MultiPolygon {
 impl GeometryCollectionTrait for GeometryCollection {
     type GeometryType<'a> = &'a Twkb;
 
+    #[inline]
     fn num_geometries(&self) -> usize {
         self.geometries.len()
     }
@@ -450,6 +485,7 @@ impl GeometryCollectionTrait for GeometryCollection {
         unsafe_code,
         reason = "geo-traits declares it unsafe; the index is checked"
     )]
+    #[inline]
     unsafe fn geometry_unchecked(&self, i: usize) -> &Twkb {
         &self.geometries[i]
     }
@@ -501,10 +537,12 @@ macro_rules! geometry_trait {
             type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
             type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
+            #[inline]
             fn dim(&self) -> Dimensions {
                 self.header.dimension().into()
             }
 
+            #[inline]
             fn as_type(
                 &self,
             ) -> Kind<
@@ -553,10 +591,12 @@ macro_rules! any_geometry_trait {
             type TriangleType<'b> = UnimplementedTriangle<f64> where Self: 'b;
             type LineType<'b> = UnimplementedLine<f64> where Self: 'b;
 
+            #[inline]
             fn dim(&self) -> Dimensions {
                 self.header().dimension().into()
             }
 
+            #[inline]
             fn as_type(
                 &self,
             ) -> Kind<

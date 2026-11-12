@@ -5,6 +5,7 @@ use crate::error::TwkbError;
 
 /// The unsigned varint at `pos`, and the position after it; `None` if it is cut short, longer than 10 bytes, or holds
 /// bits beyond 64. The one and two byte varints most steps between coordinates take are read without a loop.
+// Not the integer-encoding crate: with it, `just bench` read 54-169% slower (i9-10885H, 2026-11-11)
 #[inline(always)]
 #[expect(
     clippy::inline_always,
