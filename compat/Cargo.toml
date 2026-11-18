@@ -4,6 +4,7 @@ version = "0.0.0"
 description = "twkb against other TWKB implementations' test cases and against PostGIS"
 publish = false
 edition = "2024"
+rust-version = "1.88"
 # Mixed: this crate's own code and cases are MIT OR Apache-2.0, the other implementations' test cases are under their
 # projects' licenses, each beside them (README.md)
 license = "LicenseRef-Mixed"
