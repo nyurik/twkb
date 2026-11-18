@@ -1,8 +1,8 @@
-
 [workspace]
 # Other implementations' test cases, under their own licenses, and the PostGIS check: a crate of their own, outside
 # the published package
 members = ["compat"]
+resolver = "3"
 
 [workspace.lints.rust]
 # `deny` rather than `forbid`: geo-traits declares some accessors `unsafe fn`,
@@ -44,6 +44,7 @@ cargo = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 module_name_repetitions = "allow"
+
 [package]
 name = "twkb"
 version = "0.1.3"
