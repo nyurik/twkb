@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/nyurik/twkb/compare/v0.1.3...v0.1.4) - 2026-11-19
+
+### Other
+
+- limit job run time with timeout-minutes ([#9](https://github.com/nyurik/twkb/pull/9))
+- fix clippy lint ([#7](https://github.com/nyurik/twkb/pull/7))
+
 ## [0.1.3](https://github.com/nyurik/twkb/compare/v0.1.2...v0.1.3) - 2026-11-12
 
 ### Other
