@@ -85,7 +85,7 @@ geo-traits = { version = "0.3", features = ["geo-types"] }
 geo-types = { version = "0.7.20", default-features = false, features = ["std"] }
 insta = "1.43"
 wkb = "0.9"
-wkt = { version = "0.14", default-features = false }
+wkt = { version = "0.15", default-features = false }
 
 [lints]
 workspace = true
